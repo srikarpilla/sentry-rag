@@ -72,10 +72,11 @@ Copy the `rag_chat/` and `rag_kb/` folders next to your app. `rag_chat/chat.html
 ## Settings (environment variables)
 | Variable | Default | Meaning |
 |---|---|---|
-| LLM_PROVIDER | none | none, anthropic or ollama |
-| RETRIEVER | tfidf | `dense` uses sentence-transformers (extra install, downloads a model; not tested here) |
-| MIN_SCORE / MIN_COVERAGE | 0.12 / 0.34 | how strict the "not in my documents" check is |
-| KB_DIR | rag_kb | knowledge base folder |
+| LLM_PROVIDER | none | `none`, `cohere` (free tier), `anthropic` or `ollama` |
+| RETRIEVER | faiss | `faiss` (default) uses sentence-transformers + FAISS vector database; or `tfidf` |
+| MIN_SCORE | 0.25 | cosine similarity threshold for out-of-scope refusal |
+| KB_DIR | rag_kb | knowledge base folder (supports Markdown and PDFs) |
+
 
 ## Known limits
 - Keyword retrieval misses questions worded very differently from the documents. The `dense` retriever helps.
