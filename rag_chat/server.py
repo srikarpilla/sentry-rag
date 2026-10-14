@@ -64,8 +64,33 @@ def chat_health():
         "files_count": len(files),
         "files": files,
         "retriever": s.retriever.name,
+        "reranker": s.reranker.name if (s.use_rerank and s.reranker) else "none",
         "min_score": s.min_score,
-        "llm_provider": llm.provider()
+        "llm_provider": llm.provider(),
+    }
+
+
+@router.get("/chat/metrics")
+def chat_metrics():
+    import json
+    from .metrics import evaluate_retrieval
+    s = get_service()
+    eval_file = Path(__file__).resolve().parent.parent / "tests" / "eval_set.json"
+    if not eval_file.is_file():
+        return {"status": "error", "message": "eval_set.json not found"}
+    eval_data = json.loads(eval_file.read_text(encoding="utf-8"))
+
+    dense = evaluate_retrieval(s.retriever, eval_data, reranker=None, min_score=s.min_score)
+    reranked = (
+        evaluate_retrieval(s.retriever, eval_data, reranker=s.reranker, min_score=s.min_score)
+        if s.reranker
+        else None
+    )
+
+    return {
+        "status": "ok",
+        "dense_faiss": dense,
+        "reranked": reranked,
     }
 
 

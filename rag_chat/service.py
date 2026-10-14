@@ -14,13 +14,21 @@ DEFAULT_KB = Path(__file__).resolve().parent.parent / "rag_kb"
 
 
 class RagService:
-    def __init__(self, kb_dir=None, retriever_kind=None, min_score=None, top_k=4):
+    def __init__(self, kb_dir=None, retriever_kind=None, min_score=None, top_k=4, use_rerank=None):
         self.chunks = load_chunks(kb_dir or os.getenv("KB_DIR", DEFAULT_KB))
         self.retriever = make_retriever(retriever_kind or os.getenv("RETRIEVER", "faiss"), self.chunks)
         env_min = os.getenv("MIN_SCORE")
         self.min_score = min_score if min_score is not None else float(env_min) if env_min else self.retriever.default_min_score
         self.top_k = top_k
         self.min_coverage = float(os.getenv("MIN_COVERAGE", getattr(self.retriever, "default_min_coverage", 0.0)))
+
+        # Re-ranking configuration
+        if use_rerank is not None:
+            self.use_rerank = use_rerank
+        else:
+            self.use_rerank = os.getenv("USE_RERANK", "true").lower() in ("true", "1", "yes")
+        from .rerank import get_reranker
+        self.reranker = get_reranker() if self.use_rerank else None
 
     # ---- helpers
     def _retrieval_query(self, question, history):
@@ -57,7 +65,19 @@ class RagService:
     def ask(self, question: str, history=None, use_llm: bool = True) -> dict:
         question = question.strip()
         query = self._retrieval_query(question, history)
-        hits = self.retriever.search(query, self.top_k)
+
+        fetch_k = max(self.top_k * 3, 12) if (self.use_rerank and self.reranker) else self.top_k
+        candidates = self.retriever.search(query, fetch_k)
+
+        if not candidates or candidates[0][1] < self.min_score:
+            return {"answer": NOT_COVERED, "sources": [], "grounded": False, "mode": "refused"}
+
+        # Re-ranking stage
+        if self.use_rerank and self.reranker and candidates:
+            hits = self.reranker.rerank(query, candidates, top_k=self.top_k)
+        else:
+            hits = candidates[:self.top_k]
+
 
         # Coverage check: for follow-ups, evaluate coverage against question and query to avoid false refusal from denominator dilution
         coverage_ok = True

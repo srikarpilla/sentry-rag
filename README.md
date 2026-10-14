@@ -74,8 +74,21 @@ Copy the `rag_chat/` and `rag_kb/` folders next to your app. `rag_chat/chat.html
 |---|---|---|
 | LLM_PROVIDER | none | `none`, `cohere` (free tier), `anthropic` or `ollama` |
 | RETRIEVER | faiss | `faiss` (default) uses sentence-transformers + FAISS vector database; or `tfidf` |
+| USE_RERANK | true | enable two-stage retrieval with cross-encoder re-ranking |
+| RERANKER | auto | `cohere` (state-of-the-art with free key) or `hybrid_rrf` (offline) |
 | MIN_SCORE | 0.25 | cosine similarity threshold for out-of-scope refusal |
 | KB_DIR | rag_kb | knowledge base folder (supports Markdown and PDFs) |
+
+## Performance Metrics & Evaluation
+Run `python eval_rag.py` to evaluate the pipeline on standard IR metrics:
+- **Hit Rate @ K** (Hit@1, Hit@3, Hit@5)
+- **Recall @ K** (Recall@1, Recall@3, Recall@5)
+- **MRR (Mean Reciprocal Rank)**
+- **NDCG @ K (Normalized Discounted Cumulative Gain)**
+- **Out-of-Scope Refusal Specificity**
+- **Query Latency (ms)**
+- Multi-system comparison: FAISS Dense vs. FAISS + Re-ranking vs. TF-IDF
+
 
 
 ## Known limits
