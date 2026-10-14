@@ -41,6 +41,9 @@ class ChatResponse(BaseModel):
     sources: list[Source]
     grounded: bool
     mode: str
+    retriever: str | None = None
+    reranker: str | None = None
+    top_score: float | None = None
 
 
 @lru_cache(maxsize=1)
@@ -70,10 +73,19 @@ def chat_health():
     }
 
 
+_cached_metrics = None
+
+
 @router.get("/chat/metrics")
-def chat_metrics():
+def chat_metrics(refresh: bool = False):
+    global _cached_metrics
+    if _cached_metrics and not refresh:
+        return _cached_metrics
+
     import json
     from .metrics import evaluate_retrieval
+    from .retrieval import make_retriever
+
     s = get_service()
     eval_file = Path(__file__).resolve().parent.parent / "tests" / "eval_set.json"
     if not eval_file.is_file():
@@ -86,12 +98,16 @@ def chat_metrics():
         if s.reranker
         else None
     )
+    tfidf_retriever = make_retriever("tfidf", s.chunks)
+    tfidf = evaluate_retrieval(tfidf_retriever, eval_data, reranker=None, min_score=0.12)
 
-    return {
+    _cached_metrics = {
         "status": "ok",
         "dense_faiss": dense,
         "reranked": reranked,
+        "tfidf": tfidf,
     }
+    return _cached_metrics
 
 
 app = FastAPI(title="Sentry QC documentation assistant")

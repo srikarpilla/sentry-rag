@@ -88,16 +88,34 @@ class RagService:
             )
             coverage_ok = cov_score >= self.min_coverage
 
+        top_sc = round(hits[0][1], 3) if hits else None
+        ret_name = getattr(self.retriever, "name", "faiss")
+        rr_name = getattr(self.reranker, "name", "none") if (self.use_rerank and self.reranker) else "none"
+
         if not hits or hits[0][1] < self.min_score or not coverage_ok:
-            return {"answer": NOT_COVERED, "sources": [], "grounded": False, "mode": "refused"}
+            return {
+                "answer": NOT_COVERED,
+                "sources": [],
+                "grounded": False,
+                "mode": "refused",
+                "retriever": ret_name,
+                "reranker": rr_name,
+                "top_score": None,
+            }
 
         if not use_llm or llm.provider() == "none":
             top = hits[:2]
             body = "\n\n".join(f"From {c.label}:\n{c.text}" for c, _ in top)
-            return {"answer": body + "\n\n(Retrieval-only mode: these are the closest passages. "
-                                      "Set LLM_PROVIDER to get written answers.)",
-                    "sources": [self._source(i + 1, c, s) for i, (c, s) in enumerate(top)],
-                    "grounded": True, "mode": "retrieval"}
+            return {
+                "answer": body + "\n\n(Retrieval-only mode: these are the closest passages. "
+                                  "Set LLM_PROVIDER to get written answers.)",
+                "sources": [self._source(i + 1, c, s) for i, (c, s) in enumerate(top)],
+                "grounded": True,
+                "mode": "retrieval",
+                "retriever": ret_name,
+                "reranker": rr_name,
+                "top_score": top_sc,
+            }
 
         context = "\n\n".join(f"[{i + 1}] ({c.label})\n{c.text}" for i, (c, _) in enumerate(hits))
         earlier = ""
@@ -119,9 +137,25 @@ class RagService:
                 clean_answer.startswith("i do not have that in my documents") or
                 "i don't have that in my documents" in clean_answer or
                 "i do not have that in my documents" in clean_answer):
-            return {"answer": NOT_COVERED, "sources": [], "grounded": False, "mode": "refused"}
+            return {
+                "answer": NOT_COVERED,
+                "sources": [],
+                "grounded": False,
+                "mode": "refused",
+                "retriever": ret_name,
+                "reranker": rr_name,
+                "top_score": None,
+            }
 
         cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer) if 1 <= int(n) <= len(hits)})
         shown = cited or list(range(1, len(hits) + 1))
-        return {"answer": answer, "sources": [self._source(n, hits[n - 1][0], hits[n - 1][1]) for n in shown],
-                "grounded": True, "mode": llm.provider()}
+        return {
+            "answer": answer,
+            "sources": [self._source(n, hits[n - 1][0], hits[n - 1][1]) for n in shown],
+            "grounded": True,
+            "mode": llm.provider(),
+            "retriever": ret_name,
+            "reranker": rr_name,
+            "top_score": top_sc,
+        }
+
