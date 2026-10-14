@@ -1,0 +1,32 @@
+{
+  "in_scope": [
+    {"q": "What is the balanced accuracy of the model on the test set?", "sources": ["02_model_card"]},
+    {"q": "Why did you use balanced accuracy and not plain accuracy?", "sources": ["02_model_card"]},
+    {"q": "How many defective test images did the model pass as good?", "sources": ["04_limitations", "02_model_card"]},
+    {"q": "What threshold does the model use to decide pass or fail?", "sources": ["03_how_to_read", "02_model_card"]},
+    {"q": "What does an uncertain result mean and what should I do?", "sources": ["03_how_to_read"]},
+    {"q": "Does the model tell me which defect type it found?", "sources": ["03_how_to_read", "04_limitations", "01_project"]},
+    {"q": "What defect types exist for screws?", "sources": ["10_screw"]},
+    {"q": "Is carpet an object or a texture category?", "sources": ["04_carpet"]},
+    {"q": "Which defects can a metal nut have?", "sources": ["08_metal_nut"]},
+    {"q": "What is the MVTec AD dataset?", "sources": ["05_dataset"]},
+    {"q": "How many images are in the MVTec AD dataset?", "sources": ["05_dataset"]},
+    {"q": "Can I use the dataset for commercial purposes?", "sources": ["05_dataset", "04_limitations"]},
+    {"q": "What neural network architecture does the model use?", "sources": ["02_model_card", "01_project"]},
+    {"q": "How were the train, validation and test sets created?", "sources": ["02_model_card"]},
+    {"q": "What happens to precision at a real 1% defect rate?", "sources": ["04_limitations"]},
+    {"q": "Which paper describes the dataset?", "sources": ["90_sources", "05_dataset"]},
+    {"q": "Where can I find the EfficientNet paper?", "sources": ["90_sources"]},
+    {"q": "How is an image preprocessed before prediction?", "sources": ["01_project", "02_model_card"]},
+    {"q": "What kinds of defects can a zipper have?", "sources": ["15_zipper"]},
+    {"q": "What learning rate was used for fine-tuning?", "sources": ["02_model_card"]}
+  ],
+  "out_of_scope": [
+    "What is the capital of France?",
+    "Write me a poem about cats.",
+    "How do I fix a leaking kitchen tap?",
+    "Who won the last cricket world cup?",
+    "Give me a recipe for chicken biryani.",
+    "What is the current price of Bitcoin?"
+  ]
+}
