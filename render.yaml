@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: sentry-rag-assistant
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-chat.txt
+    startCommand: uvicorn rag_chat.server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.8
+      - key: RETRIEVER
+        value: faiss
+      - key: USE_RERANK
+        value: true
+      - key: RERANKER
+        value: cohere
+      - key: LLM_PROVIDER
+        value: cohere
+      - key: COHERE_API_KEY
+        sync: false
+      - key: MIN_SCORE
+        value: 0.25
+      - key: KB_DIR
+        value: rag_kb
